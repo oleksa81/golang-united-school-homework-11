@@ -14,5 +14,21 @@ func getOne(id int64) user {
 }
 
 func getBatch(n int64, pool int64) (res []user) {
-	return nil
+	sem := make(chan int, pool)
+	ch := make(chan user)
+
+	for i := 0; i < int(n); i++ {
+		go func(i int64) {
+			sem <- 1
+			ch <- getOne(i)
+			<-sem
+		}(int64(i))
+	}
+
+	for i := 0; i < int(n); i++ {
+		user := <-ch
+		res = append(res, user)
+	}
+
+	return
 }
